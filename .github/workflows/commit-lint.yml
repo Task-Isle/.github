@@ -8,13 +8,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: ${{ github.event_name == 'pull_request' && (github.event.pull_request.commits + 1) || 1 }}
+          fetch-depth: ${{ github.event_name == 'pull_request' && 20 || 1 }}
 
       - uses: deepakputhraya/action-branch-name@v1.0.0
         if: github.event_name == 'pull_request'
         with:
           regex: '^(feature|bugfix)\/.+'
 
-      - uses: taskmedia/action-conventional-commits@v1
+      - uses: gsactions/commit-message-checker@v2
         with:
           pattern: '^.+(\n.*)*\nIssue:\s*#\d+\s*$'
+          flags: "gm"
+          error: 'Commit must include "Issue: #number"'
+          accessToken: ${{ secrets.GITHUB_TOKEN }}
