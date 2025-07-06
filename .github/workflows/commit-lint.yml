@@ -1,0 +1,20 @@
+name: Standards Check
+
+on: [pull_request, push]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: ${{ github.event_name == 'pull_request' && (github.event.pull_request.commits + 1) || 1 }}
+
+      - uses: deepakputhraya/action-branch-name@v1.0.0
+        if: github.event_name == 'pull_request'
+        with:
+          regex: '^(feature|bugfix)\/.+'
+
+      - uses: taskmedia/action-conventional-commits@v1
+        with:
+          pattern: '^.+(\n.*)*\nIssue:\s*#\d+\s*$'
