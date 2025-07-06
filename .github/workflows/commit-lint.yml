@@ -12,6 +12,7 @@ jobs:
 
       - uses: deepakputhraya/action-branch-name@v1.0.0
         if: github.event_name == 'pull_request'
+
         with:
           regex: '^(feature|bugfix)\/.+'
 
