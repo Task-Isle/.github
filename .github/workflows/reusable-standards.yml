@@ -1,6 +1,6 @@
-name: Standards Check
-
-on: [pull_request, push]
+name: Reusable Standards Check
+on:
+  workflow_call:
 
 jobs:
   check:
@@ -9,12 +9,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: ${{ github.event_name == 'pull_request' && 20 || 1 }}
-
       - uses: deepakputhraya/action-branch-name@v1.0.0
         if: github.event_name == 'pull_request'
         with:
           regex: '^(feature|bugfix)\/.+'
-
       - uses: gsactions/commit-message-checker@v2
         with:
           pattern: '^.+(\n.*)*\nIssue:\s*#\d+\s*$'
