@@ -1,0 +1,6 @@
+name: Standards Check
+on: [pull_request, push]
+
+jobs:
+  check:
+    uses: Task-Isle/.github/.github/workflows/reusable-standards.yml@main
