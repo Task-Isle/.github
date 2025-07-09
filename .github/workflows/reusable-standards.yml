@@ -18,6 +18,7 @@ jobs:
           pattern: '^.+(\n.*)*\n\nIssue:\s*#\d+\s*$'
           flags: "gm"
           error: "Commit format is incorrect"
-          excludeTitle: true # Исключить заголовок PR
-          excludeDescription: true # Исключить описание PR
+          excludeTitle: true
+          excludeDescription: true
+          checkAllCommitMessages: true
           accessToken: ${{ secrets.GITHUB_TOKEN }}
