@@ -8,17 +8,68 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: ${{ github.event_name == 'pull_request' && 20 || 1 }}
+          fetch-depth: ${{ github.event_name == 'pull_request' && 20 || 2 }}
+
       - uses: deepakputhraya/action-branch-name@v1.0.0
         if: github.event_name == 'pull_request'
         with:
           regex: '^(feature|bugfix)\/.+'
-      - uses: gsactions/commit-message-checker@v2
-        with:
-          pattern: '^.+(\n.*)*\n\nIssue:\s*#\d+\s*$'
-          flags: "gm"
-          error: "Commit format is incorrect"
-          excludeTitle: true
-          excludeDescription: true
-          checkAllCommitMessages: true
-          accessToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check commit messages
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git fetch origin ${{ github.event.pull_request.base.ref }}:refs/remotes/origin/${{ github.event.pull_request.base.ref }}
+            commits=$(git rev-list --no-merges origin/${{ github.event.pull_request.base.ref }}..HEAD)
+          else
+            commits=$(git rev-list --no-merges -1 HEAD)
+          fi
+
+          if [ -z "$commits" ]; then
+            echo "No commits to check"
+            exit 0
+          fi
+
+          for commit in $commits; do
+            message=$(git log --format="%B" -n 1 $commit)
+            echo "Checking commit: $commit"
+            echo "---"
+            echo "$message"
+            echo "---"
+            
+            # Проверяем точный формат без временных файлов
+            
+            # Проверка 1: есть ли заголовок (первая строка не пустая)
+            header=$(echo "$message" | head -n 1 | tr -d '\n\r')
+            if [ -z "$header" ]; then
+              echo "❌ Missing commit title"
+              exit 1
+            fi
+            
+            # Проверка 2: вторая строка должна быть пустой
+            second_line=$(echo "$message" | sed -n '2p' | tr -d '\n\r')
+            if [ -n "$second_line" ]; then
+              echo "❌ Second line must be empty"
+              exit 1
+            fi
+            
+            # Проверка 3: последняя строка должна быть Issue: #число [#число ...]
+            last_line=$(echo "$message" | tail -n 1 | tr -d '\n\r')
+            if ! echo "$last_line" | grep -E -q "^Issue: (#[0-9]+\s*)+$"; then
+              echo "❌ Last line must be 'Issue: #number [#number ...]'"
+              echo "Found: '$last_line'"
+              exit 1
+            fi
+            
+            # Проверка 4: перед Issue должна быть пустая строка (если есть описание)
+            line_count=$(echo "$message" | wc -l)
+            if [ "$line_count" -gt 3 ]; then
+              before_issue_line=$(echo "$message" | tail -n 2 | head -n 1 | tr -d '\n\r')
+              if [ -n "$before_issue_line" ]; then
+                echo "❌ Empty line required before Issue line"
+                exit 1
+              fi
+            fi
+            
+            echo "✅ Commit format is valid"
+          done
+          echo "✅ All commit messages are valid"
