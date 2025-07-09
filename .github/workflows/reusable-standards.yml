@@ -15,7 +15,9 @@ jobs:
           regex: '^(feature|bugfix)\/.+'
       - uses: gsactions/commit-message-checker@v2
         with:
-          pattern: '^.+(\n.*)*\nIssue:\s*#\d+\s*$'
+          pattern: '^.+(\n.*)*\n\nIssue:\s*#\d+\s*$'
           flags: "gm"
-          error: 'Commit must include "Issue: #number"'
+          error: "Commit format is incorrect"
+          excludeTitle: true # Исключить заголовок PR
+          excludeDescription: true # Исключить описание PR
           accessToken: ${{ secrets.GITHUB_TOKEN }}
